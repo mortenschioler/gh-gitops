@@ -51,13 +51,13 @@ function workon() {
     # make sure the working tree is clean before proceeding (solution based on https://unix.stackexchange.com/questions/155046/determine-if-git-working-directory-is-clean-from-a-script)
     if [ -n "$(git status --porcelain)" ]; then 
       echo "You need to have a clean working tree before proceeding."
-      #exit 1
+      exit 1
     fi
     # fetch the issue title and format it to a branch name
     branchname=$(gh issue view $issuenum --json title --jq .title | formattitle $issuenum)
     # create and check out the new branch off of main
-    echo git fetch
-    echo git checkout -b "$branchname" origin/main
+    git fetch
+    git checkout -b "$branchname" origin/main
 }
 
 function wrapup () {
