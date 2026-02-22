@@ -1,35 +1,100 @@
 #!/usr/bin/env bash
 set -e
 
-echo "Hello gh-gitops!"
+function usage() {
+    cat << EOF
+Usage:
+  gh gitops [help|-h|--help]
+  work-on <issue>
+  wrap-up
+  deliver
+EOF
+}
 
-# Snippets to help get started:
+function help() {
+    echo "GitOps tool version 1.0."
+    usage
+    echo
+    cat << EOF
+work-on <issue>
+  Create a development branch off of main, named like the title of the issue, 
+  prefixed with the issue number.
 
-# Determine if an executable is in the PATH
-# if ! type -p ruby >/dev/null; then
-#   echo "Ruby not found on the system" >&2
-#   exit 1
-# fi
+  issue: Integer, the issue number you want to work on
 
-# Pass arguments through to another command
-# gh issue list "$@" -R cli/cli
+wrap-up 
 
-# Using the gh api command to retrieve and format information
-# QUERY='
-#   query($endCursor: String) {
-#     viewer {
-#       repositories(first: 100, after: $endCursor) {
-#         nodes {
-#           nameWithOwner
-#           stargazerCount
-#         }
-#       }
-#     }
-#   }
-# '
-# TEMPLATE='
-#   {{- range $repo := .data.viewer.repositories.nodes -}}
-#     {{- printf "name: %s - stargazers: %v\n" $repo.nameWithOwner $repo.stargazerCount -}}
-#   {{- end -}}
-# '
-# exec gh api graphql -f query="${QUERY}" --paginate --template="${TEMPLATE}"
+  Commit anything dirty (git add -A) to the current development branch 
+  and constructs a commit message that consists of the title of the 
+  issue and a reference to the issue number.
+
+deliver
+
+  Rebase from main, add (or update) the commit message to include the 
+  keyword "close" and a mention of the issue number, adda tag "READY" 
+  to the commit and pushe buth the branch and the tag to origin.
+EOF
+}
+
+function formattitle() {
+    issuenum=$1
+    tr '[:upper:]' '[:lower:]' | sed -e "1s/^/${issuenum}-/" -e 's/ /-/'
+}
+
+function workon() {
+    issuenum="$1"
+    # check that issue number was provided
+    if [ -z "$issuenum" ]; then
+      echo "Please provide the issue number."
+      exit 1
+    fi
+    # make sure the working tree is clean before proceeding (solution based on https://unix.stackexchange.com/questions/155046/determine-if-git-working-directory-is-clean-from-a-script)
+    if [ -n "$(git status --porcelain)" ]; then 
+      echo "You need to have a clean working tree before proceeding."
+      #exit 1
+    fi
+    # fetch the issue title and format it to a branch name
+    branchname=$(gh issue view $issuenum --json title --jq .title | formattitle $issuenum)
+    # create and check out the new branch off of main
+    echo git fetch
+    echo git checkout -b "$branchname" origin/main
+}
+
+function wrapup () {
+    echo NOT IMPLEMENTED
+}
+
+function deliver() {
+    echo NOT IMPLEMENTED
+}
+
+# Check if 1 or 2 arguments were provided
+if [ $# -lt 2 ] || [ $# -gt 3 ]; then
+    usage
+    exit 1
+fi
+
+# Evaluate the first argument
+command="$1"
+issuenum="$2"
+case "$command" in
+    help | -h | --help | -help)
+        help
+        ;;
+    wrap-up)
+        wrapup
+        ;;
+    work-on)
+        workon $issuenum
+        ;;
+    deliver)
+        deliver
+        ;;
+    *)
+        echo Unknown command \""$1"\"
+        usage
+        exit 1
+        ;;
+esac
+
+exit 1
