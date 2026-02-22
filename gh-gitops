@@ -38,7 +38,7 @@ EOF
 
 function formattitle() {
     issuenum=$1
-    tr '[:upper:]' '[:lower:]' | sed -e "1s/^/${issuenum}-/" -e 's/ /-/'
+    tr '[:upper:]' '[:lower:]' | sed -e "1s/^/${issuenum}-/" -e 's/ /-/g'
 }
 
 function workon() {
